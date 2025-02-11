@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  redis-master:
+    container_name: redis-master
+    image: redis:latest
+    #network_mode: "host"
+    user: root
+    command: /bin/sh -c "redis-server --bind redis-master --port 6379 --protected-mode yes --requirepass asan733 --masterauth asan733 "
+    ports:
+      - "6379:6379"
+  redis-slave-1:
+    container_name: redis-slave-1
+    image: redis:latest
+    #network_mode: "host"
+    user: root
+    command: /bin/sh -c "redis-server --bind redis-slave-1 --port 6380 --slaveof redis-master 6379 --protected-mode yes --requirepass asan733 --masterauth asan733 "
+    restart: always
+    ports:
+      - "6380:6380"
+    depends_on:
+      - redis-master
+  redis-slave-2:
+    container_name: redis-slave-2
+    image: redis:latest
+    #network_mode: "host"
+    user: root
+    command: /bin/sh -c "redis-server --bind redis-slave-2 --port 6381 --slaveof redis-master 6379 --protected-mode yes --requirepass asan733 --masterauth asan733 "
+    restart: always
+    ports:
+      - "6381:6381"
+    depends_on:
+      - redis-master
+  sentinel-1:
+    container_name: sentinel-1
+    image: bitnami/redis-sentinel:latest
+    #network_mode: "host"
+    user: root
+    command: >
+      bash -c "echo 'protected-mode no' > sentinel.conf &&
+      echo 'bind 127.0.0.1' > sentinel.conf &&
+      echo 'port 26379' > sentinel.conf &&
+      echo 'dir /tmp' >> sentinel.conf &&
+      echo 'protected-mode no' >> sentinel.conf &&
+      echo 'sentinel monitor mymaster 127.0.0.1 6379 2' >> sentinel.conf &&
+      echo 'sentinel auth-pass mymaster asan733' >> sentinel.conf &&
+      echo 'sentinel down-after-milliseconds mymaster 3000' >> sentinel.conf &&
+      echo 'sentinel parallel-syncs mymaster 1' >> sentinel.conf &&
+      echo 'sentinel failover-timeout mymaster 6000' >> sentinel.conf &&
+      echo 'loglevel warning' >> sentinel.conf &&
+      redis-server sentinel.conf --sentinel"
+    ports:
+      - "26379:26379"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+  sentinel-2:
+    container_name: sentinel-2
+    image: bitnami/redis-sentinel:latest
+    #network_mode: "host"
+    user: root
+    command: >
+      bash -c "echo 'protected-mode no' > sentinel.conf &&
+      echo 'bind 127.0.0.1' > sentinel.conf &&
+      echo 'port 26380' > sentinel.conf &&
+      echo 'dir /tmp' >> sentinel.conf &&
+      echo 'protected-mode no' >> sentinel.conf &&
+      echo 'sentinel monitor mymaster 127.0.0.1 6379 2' >> sentinel.conf &&
+      echo 'sentinel auth-pass mymaster asan733' >> sentinel.conf &&
+      echo 'sentinel down-after-milliseconds mymaster 3000' >> sentinel.conf &&
+      echo 'sentinel parallel-syncs mymaster 1' >> sentinel.conf &&
+      echo 'sentinel failover-timeout mymaster 6000' >> sentinel.conf &&
+      echo 'loglevel warning' >> sentinel.conf &&
+      redis-server sentinel.conf --sentinel"
+    ports:
+      - "26380:26380"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+  sentinel-3:
+    container_name: sentinel-3
+    image: bitnami/redis-sentinel:latest
+    #network_mode: "host"
+    user: root
+    command: >
+      bash -c "echo 'protected-mode no' > sentinel.conf &&
+      echo 'bind 127.0.0.1' > sentinel.conf &&
+      echo 'port 26381' > sentinel.conf &&
+      echo 'dir /tmp' >> sentinel.conf &&
+      echo 'protected-mode no' >> sentinel.conf &&
+      echo 'sentinel monitor mymaster 127.0.0.1 6379 2' >> sentinel.conf &&
+      echo 'sentinel auth-pass mymaster asan733' >> sentinel.conf &&
+      echo 'sentinel down-after-milliseconds mymaster 3000' >> sentinel.conf &&
+      echo 'sentinel parallel-syncs mymaster 1' >> sentinel.conf &&
+      echo 'sentinel failover-timeout mymaster 6000' >> sentinel.conf &&
+      echo 'loglevel warning' >> sentinel.conf &&
+      redis-server sentinel.conf --sentinel"
+    ports:
+      - "26381:26381"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+
+networks:
+  promnet:
+    driver: bridge

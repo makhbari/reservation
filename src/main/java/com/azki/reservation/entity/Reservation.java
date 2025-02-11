@@ -24,7 +24,7 @@ public class Reservation implements Serializable {
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
-    @Column(name = "endTime", nullable = false)
+    @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
     @Column(name = "status", nullable = false)

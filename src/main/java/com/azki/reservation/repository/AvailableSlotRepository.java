@@ -6,18 +6,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
+@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Long> {
-
-    @Query(value = "SELECT * FROM available_slots " +
-            "WHERE CAST(start_time AS DATE) = :startDate", nativeQuery = true)
-    List<AvailableSlot> findAllByStartDate(@Param("startDate") LocalDate startDate);
-
     List<AvailableSlot> findAllByReservedIsFalseAndStartTimeBetween(LocalDateTime fromStartTime, LocalDateTime endStartTime);
 
 
@@ -29,7 +26,7 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
 
     @Modifying
     @Query(value = "UPDATE available_slots " +
-            "SET is_reserved = 0 " +
+            "SET is_reserved = 0 , version = 0" +
             "WHERE start_time = :startTime", nativeQuery = true)
     int updateAvailableSlot(LocalDateTime startTime);
 }

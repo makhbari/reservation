@@ -36,12 +36,12 @@ public class ReservationService {
     private final CancelReservationRepository cancelReservationRepository;
 
     public ReservationService(JmsTemplate jmsTemplate, ReservationRepository reservationRepository,
-                              UserService userService, SlotService slotService, UserReservationService userReservationService, ReservationRepository reservationRepository1, CancelReservationRepository cancelReservationRepository) {
+                              UserService userService, SlotService slotService, UserReservationService userReservationService, CancelReservationRepository cancelReservationRepository) {
         this.jmsTemplate = jmsTemplate;
         this.userReservationService = userReservationService;
         this.userService = userService;
         this.slotService = slotService;
-        this.reservationRepository = reservationRepository1;
+        this.reservationRepository = reservationRepository;
         this.cancelReservationRepository = cancelReservationRepository;
     }
 
@@ -59,7 +59,6 @@ public class ReservationService {
             throw new ValidationException("Start time of reservation must be after today!");
         }
 
-        //TODO: تعریف ایندکسهای مناسب روی جدول
         AvailableSlotInfo availableSlotInfo = slotService.findClosestSlot(DateUtil.formatLocalDateTime(request.getStartTime()));
         if (availableSlotInfo == null) {
             throw new NotFoundException(ErrorsStatus.AVAILABLE_SLOT_NOT_FOUND.getCode(), ErrorsStatus.AVAILABLE_SLOT_NOT_FOUND.getMessage());
@@ -68,7 +67,7 @@ public class ReservationService {
         }
     }
 
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackOn = {Exception.class, RuntimeException.class})
     public boolean cancelReservation(Long reservationId, CancelReservationRequestDto requestDto) throws NotFoundException, IOException, ParseException {
         Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
         if (reservationOptional.isEmpty()) {
@@ -80,6 +79,7 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         CancelReservation cancelReservation = new CancelReservation();
+//        cancelReservation.setId(1L);
         cancelReservation.setUser(reservation.getUser());
         cancelReservation.setReservation(reservation);
         cancelReservation.setCancellationReason(requestDto.getReason());

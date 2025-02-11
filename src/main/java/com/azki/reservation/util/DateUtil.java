@@ -6,14 +6,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateUtil {
-    private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static final String PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(PATTERN);
 
     public static String formatLocalDateTime(LocalDateTime dateTime) {
         return dateTime.format(DATE_TIME_FORMATTER);
     }
 
     public static long dateTimeToSeconds(String dateTimeStr) throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return sdf.parse(dateTimeStr).getTime() / 1000;  // تبدیل میلی‌ثانیه به ثانیه
+        SimpleDateFormat sdf = new SimpleDateFormat(PATTERN);
+        return sdf.parse(dateTimeStr).getTime() / 1000;
     }
 }

@@ -25,7 +25,7 @@ public class UserReservationService {
         this.reservationRepository = reservationRepository;
     }
 
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackOn = {Exception.class, RuntimeException.class})
     public void saveUserReservation(User user, CreateReservationRequestDto requestDto, AvailableSlotInfo slotInfo) throws IOException, ParseException {
         try {
             int updatedRowsCount = slotService.updateAvailableSlotInDB(requestDto.getStartTime(), slotInfo.getVersion());
@@ -38,15 +38,13 @@ public class UserReservationService {
             throw ex;
         }
         Reservation reservation = new Reservation();
-        reservation.setId(1L);
+//        reservation.setId(1L);
         reservation.setUser(user);
         reservation.setStatus(ReservationStatus.PENDING);
         reservation.setStartTime(requestDto.getStartTime());
         reservation.setEndTime(requestDto.getEndTime());
         reservationRepository.save(reservation);
 
-        slotInfo.setReserved(true);
-        slotInfo.setVersion(slotInfo.getVersion() + 1);
         slotService.updateSlotInfoInCache(slotInfo);
     }
 }

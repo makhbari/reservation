@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class SlotService {
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, String> redisTemplate;
 
+    @Value("${info.available.slots.cache.ttl.days}")
+    private int cacheMaxTimeInDays;
+
     public SlotService(AvailableSlotRepository availableSlotRepository, ObjectMapper objectMapper, RedisTemplate<String, String> redisTemplate) {
         this.availableSlotRepository = availableSlotRepository;
         this.objectMapper = objectMapper;
@@ -36,7 +40,7 @@ public class SlotService {
 
     @PostConstruct
     public void initAvailableSlotsCache() {
-        List<AvailableSlot> availableSlots = availableSlotRepository.findAllByReservedIsFalseAndStartTimeBetween(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(7));
+        List<AvailableSlot> availableSlots = availableSlotRepository.findAllByReservedIsFalseAndStartTimeBetween(LocalDateTime.now(), LocalDateTime.now().plusDays(cacheMaxTimeInDays));
         log.info("available slots count is : " + availableSlots.size());
 
         availableSlots.forEach(availableSlot -> {
@@ -64,13 +68,11 @@ public class SlotService {
     public AvailableSlotInfo findClosestSlot(String targetDateTime) throws IOException, ParseException {
         long targetTimeInSeconds = dateTimeToSeconds(targetDateTime);
 
-        // جستجو برای slotهایی که در بازه زمانی 24 ساعت قبل و بعد از تاریخ ورودی قرار دارند
         Set<ZSetOperations.TypedTuple<String>> closestSlot = redisTemplate.opsForZSet()
-                .rangeByScoreWithScores(CACHE_KEY, targetTimeInSeconds - (24 * 3600), targetTimeInSeconds + (24 * 3600));
+                .rangeByScoreWithScores(CACHE_KEY, 0, targetTimeInSeconds + ((long) cacheMaxTimeInDays * 24 * 3600));
 
         org.springframework.data.redis.core.ZSetOperations.TypedTuple<String> closestSlotTuple = closestSlot.stream()
                 .min((entry1, entry2) -> {
-                    // محاسبه فاصله زمانی از تاریخ ورودی
                     long diff1 = Math.abs(entry1.getScore().longValue() - targetTimeInSeconds);
                     long diff2 = Math.abs(entry2.getScore().longValue() - targetTimeInSeconds);
                     return Long.compare(diff1, diff2);
@@ -94,11 +96,8 @@ public class SlotService {
         return availableSlotRepository.updateAvailableSlot(startTime);
     }
 
-    public void updateSlotInfoInCache(AvailableSlotInfo slot) throws IOException, ParseException {
-        long eventTimeInSeconds = dateTimeToSeconds(slot.getStartTime());
-
+    public void updateSlotInfoInCache(AvailableSlotInfo slot) throws IOException {
         String jsonEvent = objectMapper.writeValueAsString(slot);
         redisTemplate.opsForZSet().remove(CACHE_KEY, jsonEvent);
-        redisTemplate.opsForZSet().add(CACHE_KEY, jsonEvent, eventTimeInSeconds);
     }
 }
