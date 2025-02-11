@@ -18,6 +18,7 @@ import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class ReservationService {
     }
 
     @JmsListener(destination = "ReservationEventQueue")
+    @Async
     public void handleQueueMessage(CreateReservationRequestDto request) throws InvalidUserException, IOException, ParseException, NotFoundException {
         log.info("start reservation process on request info: {}", request);
 

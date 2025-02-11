@@ -26,7 +26,7 @@ public class UserReservationService {
     }
 
     @Transactional(rollbackOn = {Exception.class, RuntimeException.class})
-    public void saveUserReservation(User user, CreateReservationRequestDto requestDto, AvailableSlotInfo slotInfo) throws IOException, ParseException {
+    public void saveUserReservation(User user, CreateReservationRequestDto requestDto, AvailableSlotInfo slotInfo) throws IOException {
         try {
             int updatedRowsCount = slotService.updateAvailableSlotInDB(requestDto.getStartTime(), slotInfo.getVersion());
             if (updatedRowsCount == 0) {
