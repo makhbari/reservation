@@ -46,7 +46,7 @@ public class ReservationServiceUnitTest {
     }
 
     @Test
-    public void handleQueueMessage_ReservationTimeBeforeToday_ValidationExceptionIsThrown() throws InvalidUserException {
+    public void handleQueueMessage_ReservationTimeBeforeNow_ValidationExceptionIsThrown() throws InvalidUserException {
         Mockito.when(userService.findUser(anyLong())).thenReturn(new User());
         assertThrows(ValidationException.class, () -> reservationService.handleQueueMessage(getCreateReservationRequestDto(LocalDateTime.now().minusDays(1))));
     }
