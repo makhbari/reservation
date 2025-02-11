@@ -100,4 +100,11 @@ public class SlotService {
         String jsonEvent = objectMapper.writeValueAsString(slot);
         redisTemplate.opsForZSet().remove(CACHE_KEY, jsonEvent);
     }
+
+    public void removeAvailableSlotCache(LocalDateTime now) throws ParseException {
+        long targetTimeInSeconds = dateTimeToSeconds(DateUtil.formatLocalDateTime(now));
+
+        redisTemplate.opsForZSet()
+                .removeRangeByScore(CACHE_KEY, Double.NEGATIVE_INFINITY, targetTimeInSeconds - (24 * 3600));
+    }
 }
