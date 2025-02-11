@@ -81,10 +81,9 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         CancelReservation cancelReservation = new CancelReservation();
-//        cancelReservation.setId(1L);
         cancelReservation.setUser(reservation.getUser());
         cancelReservation.setReservation(reservation);
-        cancelReservation.setCancellationReason(requestDto.getReason());
+        cancelReservation.setCancellationReason(requestDto.getReason() != null ? requestDto.getReason() : null);
         cancelReservation.setDescription(requestDto.getDescription());
         cancelReservation.setCancellationTime(LocalDateTime.now());
         cancelReservationRepository.save(cancelReservation);

@@ -28,7 +28,7 @@ public class CancelReservation implements Serializable {
     @Column(name = "cancellation_time", nullable = false)
     private LocalDateTime cancellationTime;
 
-    @Column(name = "cancellation_reason", nullable = false)
+    @Column(name = "cancellation_reason")
     @Enumerated(EnumType.STRING)
     private CancellationReason cancellationReason;
 
