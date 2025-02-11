@@ -66,10 +66,14 @@ public class SlotService {
     }
 
     public AvailableSlotInfo findClosestSlot(String targetDateTime) throws IOException, ParseException {
+        log.info("Looking for closest slot for target date time: {}", targetDateTime);
         long targetTimeInSeconds = dateTimeToSeconds(targetDateTime);
+        log.debug("Converted target date time to seconds: {}", targetTimeInSeconds);
 
         Set<ZSetOperations.TypedTuple<String>> closestSlot = redisTemplate.opsForZSet()
                 .rangeByScoreWithScores(CACHE_KEY, 0, targetTimeInSeconds + ((long) cacheMaxTimeInDays * 24 * 3600));
+
+        log.debug("Retrieved closest slots from Redis: {}", closestSlot);
 
         org.springframework.data.redis.core.ZSetOperations.TypedTuple<String> closestSlotTuple = closestSlot.stream()
                 .min((entry1, entry2) -> {
@@ -80,7 +84,10 @@ public class SlotService {
                 .orElse(null);
 
         if (closestSlotTuple != null) {
+            log.info("Found closest slot: {}", closestSlotTuple.getValue());
             return objectMapper.readValue(closestSlotTuple.getValue(), AvailableSlotInfo.class);
+        } else {
+            log.warn("No available slots found for target date time: {}", targetDateTime);
         }
 
         return null;

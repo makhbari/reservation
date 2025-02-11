@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 @Service
 @Slf4j
@@ -38,7 +37,6 @@ public class UserReservationService {
             throw ex;
         }
         Reservation reservation = new Reservation();
-//        reservation.setId(1L);
         reservation.setUser(user);
         reservation.setStatus(ReservationStatus.PENDING);
         reservation.setStartTime(requestDto.getStartTime());
